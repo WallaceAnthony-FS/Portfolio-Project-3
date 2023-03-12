@@ -18,6 +18,7 @@ Application for browsing the Spotify API.
 - TailwindCSS
 - TypeScript
 - Prisma
+- sqlite
 - tRPC
 - Auth.js
 - Spotify API
