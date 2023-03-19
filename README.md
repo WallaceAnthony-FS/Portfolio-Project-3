@@ -68,6 +68,11 @@ Once running locally, the project can be accessed at the following URL:
 
 http://localhost:3000
 
-Signin route:
-
-http://localhost:3000/api/auth/signin
+API Routes:
+| Route | Description |
+| --- | --- |
+| /api/albums | Get recommended albums |
+| /api/categories | Get categories |
+| /api/genres | Get genres |
+| /api/search | Search for artists, albums, and tracks |
+| /api/auth/signin | Sign in with Spotify |
