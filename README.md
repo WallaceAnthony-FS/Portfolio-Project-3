@@ -65,6 +65,9 @@ npm run dev
 ## Links
 
 Once running locally, the project can be accessed at the following URL:
+
 http://localhost:3000
+
 Signin route:
+
 http://localhost:3000/api/auth/signin
