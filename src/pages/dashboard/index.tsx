@@ -3,15 +3,42 @@ import Head from "next/head";
 import Link from "next/link";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { getServerSession } from "next-auth";
-import { useState } from "react";
-
-import { api } from "~/utils/api";
-import { NextResponse } from "next/server";
 import { useRouter } from "next/router";
 
+import { api } from "~/utils/api";
+import { prisma } from "~/server/db";
+import { authOptions } from "~/server/auth";
+import getAlbums from "../api/albums";
 
 
-const Home: NextPage = () => {  
+export async function getServerSideProps(context) {
+  const session = await getServerSession(context.req, context.res, authOptions)
+  if(session && session.user){
+    const account = await prisma.account.findFirst({
+        where: {
+          userId: session.user.id
+      }})
+
+      const albums = await getAlbums(account)
+
+      return {
+        props: {
+          account
+        }
+      }
+  }
+  return {
+    props: {}
+  }
+}
+
+const Dashboard: NextPage = (props) => {  
+
+    const router = useRouter()
+    const { data: sessionData, status } = useSession();
+    if(status === "unauthenticated"){
+        router.push("/")
+    }
   return (
     <>
       <Head>
@@ -33,19 +60,22 @@ const Home: NextPage = () => {
   );
 };
 
-export default Home;
+export default Dashboard;
 
 const SigninWithAuth: React.FC = () => {
-  const router = useRouter()
-  const { data: sessionData, status } = useSession();
-  if(status === "authenticated"){
-    router.push("/dashboard")
-  }
+  const { data: sessionData } = useSession();
 
-  console.log(status)
+  const { data: secretMessage } = api.example.getSecretMessage.useQuery(
+    undefined, // no input
+    { enabled: sessionData?.user !== undefined },
+  );
+
   return (
     <div className="flex flex-col items-center justify-center gap-4">
-      {status === "loading" && <p className="text-center text-2xl text-white">Loading...</p>}
+      <p className="text-center text-2xl text-white">
+        {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
+        {secretMessage && <span> - {secretMessage}</span>}
+      </p>
       <button
         className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
         onClick={sessionData ? () => void signOut() : () => void signIn()}

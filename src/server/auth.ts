@@ -4,11 +4,12 @@ import {
   type NextAuthOptions,
   type DefaultSession,
 } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
 import SpotifyProvider from "next-auth/providers/spotify";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { env } from "~/env.mjs";
 import { prisma } from "~/server/db";
+import ky from "ky-universal";
+import { type TokenSet } from "next-auth";
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -38,10 +39,51 @@ declare module "next-auth" {
  */
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        // session.user.role = user.role; <-- put other properties on the session here
+    async session({ session, user }) {
+      const [spotify] = await prisma.account.findMany({
+        where: {
+          userId: user.id,
+          provider: "spotify",
+        },
+      });
+      if (spotify.expires_at * 1000 < Date.now()) {
+        // If access token has expired, refresh it
+        const formData = new URLSearchParams();
+        formData.set("grant_type", "refresh_token");
+        formData.set("refresh_token", spotify.refresh_token);
+        formData.set("client_id", env.SPOTIFY_CLIENT_ID);
+        formData.set("client_secret", env.SPOTIFY_CLIENT_SECRET);
+        try {
+          const response = await ky.post(
+            "https://accounts.spotify.com/api/token",
+            {
+              body: formData,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+              },
+            }
+          );
+          console.log("hey there");
+          const tokens: TokenSet = await response.json();
+          if (!response.ok) throw tokens;
+
+          await prisma.account.update({
+            data: {
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+              expires_at: Math.floor(Date.now() / 1000 + tokens.expires_in),
+            },
+            where: {
+              provider_providerAccountId: {
+                provider: "spotify",
+                providerAccountId: spotify.providerAccountId,
+              },
+            },
+          });
+        } catch (error) {
+          console.log("Error refreshing access token", error);
+          session.error = "RefreshAccessTokenError";
+        }
       }
       return session;
     },

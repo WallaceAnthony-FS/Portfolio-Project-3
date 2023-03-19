@@ -50,6 +50,12 @@ To install the project, run the following command:
 npm install
 ```
 
+To sync prisma with your db and generate ts types run:
+
+```bash
+npx prisma db push
+```
+
 To start the project, run the following command:
 
 ```bash
