@@ -9,6 +9,9 @@ import { api } from "~/utils/api";
 import { prisma } from "~/server/db";
 import { authOptions } from "~/server/auth";
 import getAlbums from "../api/albums";
+import getCategories from "../api/categories";
+import getGenres from "../api/genres";
+import search from "../api/search"
 
 
 export async function getServerSideProps(context) {
@@ -20,10 +23,16 @@ export async function getServerSideProps(context) {
       }})
 
       const albums = await getAlbums(account)
+      const categories = await getCategories(account)
+      const genres = await getGenres(account)
+      const searchResults = await search(account, "test")
 
       return {
         props: {
-          account
+          albums,
+          categories,
+          genres,
+          searchResults
         }
       }
   }
