@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
               },
             }
           );
-          console.log("hey there");
+
           const tokens: TokenSet = await response.json();
           if (!response.ok) throw tokens;
 
@@ -81,7 +81,7 @@ export const authOptions: NextAuthOptions = {
             },
           });
         } catch (error) {
-          console.log("Error refreshing access token", error);
+          console.error("Error refreshing access token", error);
           session.error = "RefreshAccessTokenError";
         }
       }
