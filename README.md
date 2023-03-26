@@ -73,6 +73,5 @@ API Routes:
 | --- | --- |
 | /api/albums | Get recommended albums |
 | /api/categories | Get categories |
-| /api/genres | Get genres |
-| /api/search | Search for artists, albums, and tracks |
+| /api/search?q=<search> | Search for artists, albums, and tracks |
 | /api/auth/signin | Sign in with Spotify |
